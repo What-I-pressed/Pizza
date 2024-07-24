@@ -19,8 +19,7 @@ namespace WebPizzaSite.Controllers
         }
         public IActionResult Index()
         {
-            var list = _pizzaDbContext.Categories
-                .ProjectTo<CategoryItemViewModel>(_mapper.ConfigurationProvider)
+            var list = _pizzaDbContext.Categories.ProjectTo<CategoryItemViewModel>(_mapper.ConfigurationProvider)
                 .ToList();
 
             return View(list);
