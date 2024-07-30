@@ -12,5 +12,6 @@ public class CategoryCreateViewModel
     public string Description { get; set; } = String.Empty;
     [Display(Name="Фото url")]
     [Required(ErrorMessage = "Вкажіть url для фото категорії")]
-    public string Image { get; set; } = String.Empty;
+     public IFormFile Image { get; set; }
+
 }

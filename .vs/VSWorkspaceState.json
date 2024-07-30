@@ -1,6 +1,14 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\WebPizzaSite",
+    "\\WebPizzaSite\\WebPizzaSite",
+    "\\WebPizzaSite\\WebPizzaSite\\Controllers",
+    "\\WebPizzaSite\\WebPizzaSite\\Migrations",
+    "\\WebPizzaSite\\WebPizzaSite\\Views",
+    "\\WebPizzaSite\\WebPizzaSite\\Views\\Main",
+    "\\WebPizzaSite\\WebPizzaSite\\Views\\Shared"
   ],
+  "SelectedNode": "\\WebPizzaSite\\WebPizzaSite\\Migrations\\20240721185558_lengthened the image str.Designer.cs",
   "PreviewInSolutionExplorer": false
 }
