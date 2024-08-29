@@ -12,7 +12,7 @@ namespace WebPizzaSite.Data.Entities
         [Required, StringLength(255)]
         public string Name { get; set; } = null!;
 
-        [Required, StringLength(255)]
+        [Required, StringLength(8000)]
         public string Image { get; set; } = null!;
 
         [StringLength(4000)]

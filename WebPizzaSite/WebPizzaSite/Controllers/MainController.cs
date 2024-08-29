@@ -12,6 +12,7 @@ namespace WebPizzaSite.Controllers
         private readonly PizzaDbContext _pizzaDbContext;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IMapper _mapper;
+        private readonly string imgPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
 
         public MainController(PizzaDbContext pizzaDbContext, IMapper mapper,
             IWebHostEnvironment webHostEnvironment)
@@ -40,38 +41,101 @@ namespace WebPizzaSite.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(CategoryCreateViewModel model)
+        public IActionResult Create(CategoryCreateViewModel model)
         {
-            //Якщо модель валідна - тоді зберігаємо дані в БД
             if (ModelState.IsValid)
             {
-                var cat = _mapper.Map<CategoryEntity>(model);
-
+                string filePath = null;
                 if (model.Image != null && model.Image.Length > 0)
                 {
-                    var extension = Path.GetExtension(model.Image.FileName);
-                    string fileName = $"{Guid.NewGuid().ToString()}{extension}";
-                    // Define the path to save the image
-                    var path = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", fileName);
-                    var dir = Path.GetDirectoryName(path);
-                    if (!Directory.Exists(dir) && dir != null)
-                    {
-                        Directory.CreateDirectory(dir);
-                    }
-                    // Save the file
-                    using (var stream = new FileStream(path, FileMode.Create))
-                    {
-                        await model.Image.CopyToAsync(stream);
-                    }
-                    cat.Image = fileName;
+                    filePath = Path.GetFileName(model.Image.FileName);
 
+                    // Ensure the upload directory exists
+                    if (!Directory.Exists(imgPath))
+                    {
+                        Directory.CreateDirectory(imgPath);
+                    }
+
+                    using (var stream = new FileStream(Path.Combine(imgPath, filePath), FileMode.Create))
+                    {
+                        model.Image.CopyTo(stream);
+                    }
                 }
 
-                _pizzaDbContext.Categories.Add(cat);
+                var category = new CategoryEntity
+                {
+                    Name = model.Name,
+                    Description = model.Description,
+                    Image = filePath  // Store the relative file path
+                };
+
+                _pizzaDbContext.Categories.Add(category);
                 _pizzaDbContext.SaveChanges();
+
                 return RedirectToAction(nameof(Index));
             }
             return View(model);
+        }
+
+
+        [HttpGet]
+        public IActionResult Edit(int id)
+        {
+            var pizza = _pizzaDbContext.Categories.SingleOrDefault(c => c.Id == id);
+            if (pizza == null) return NotFound();
+
+            var item = new CategoryEditViewModel
+            {
+                Id = pizza.Id,
+                Name = pizza.Name,
+                Description = pizza.Description,
+                ExistingImagePath = pizza.Image
+            };
+            return View(item);
+        }
+
+        [HttpPost]
+        public IActionResult Edit(CategoryEditViewModel updatedItem)
+        {
+            if (ModelState.IsValid)
+            {
+                var pizza = _pizzaDbContext.Categories.SingleOrDefault(c => c.Id == updatedItem.Id);
+                if (pizza == null) return NotFound();
+
+                pizza.Name = updatedItem.Name;
+                pizza.Description = updatedItem.Description;
+
+                if (updatedItem.Image != null && updatedItem.Image.Length > 0)
+                {
+                    var filePath = Path.GetFileName(updatedItem.Image.FileName);
+
+                    if (!Directory.Exists(imgPath))
+                    {
+                        Directory.CreateDirectory(imgPath);
+                    }
+
+                    using (var stream = new FileStream(Path.Combine(imgPath, filePath), FileMode.Create))
+                    {
+                        updatedItem.Image.CopyTo(stream);
+                    }
+
+                    // Delete the old image if it exists
+                    if (!string.IsNullOrEmpty(updatedItem.ExistingImagePath))
+                    {
+                        var oldImagePath = Path.Combine(imgPath, updatedItem.ExistingImagePath);
+                        if (System.IO.File.Exists(oldImagePath))
+                        {
+                            System.IO.File.Delete(oldImagePath);
+                        }
+                    }
+
+                    pizza.Image = filePath;
+                }
+
+                _pizzaDbContext.SaveChanges();
+                return RedirectToAction(nameof(Index));
+            }
+            return View(updatedItem);
         }
 
         [HttpDelete]
