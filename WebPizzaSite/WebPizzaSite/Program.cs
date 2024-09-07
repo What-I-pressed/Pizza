@@ -1,6 +1,10 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using WebPizzaSite.Constants;
 using WebPizzaSite.Data;
 using WebPizzaSite.Data.Entities;
+using WebPizzaSite.Data.Entities.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,37 +14,80 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<PizzaDbContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+
+// Identity options
+builder.Services.AddIdentity<UserEntity, RoleEntity>(options =>
+{
+    options.Password.RequireDigit = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequiredLength = 6;
+    options.Password.RequiredUniqueChars = 1;
+
+    //options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+    //options.Lockout.MaxFailedAccessAttempts = 5;
+    //options.Lockout.AllowedForNewUsers = true;
+
+    //options.SignIn.RequireConfirmedEmail = true;
+})
+    .AddEntityFrameworkStores<PizzaDbContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    // Cookie settings
+    options.Cookie.HttpOnly = true;
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.SlidingExpiration = true;
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy =>
+    {
+        policy.RequireRole(Roles.Admin); // Переконайтеся, що Roles.Admin = "admin"
+    });
+});
+
+
 builder.Services.AddAutoMapper(typeof(Program));
 
 var app = builder.Build();
 
 using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
-{ 
+{
     var context = serviceScope.ServiceProvider.GetService<PizzaDbContext>();
+    var userManager = serviceScope.ServiceProvider.GetService<UserManager<UserEntity>>();
+    var roleManager = serviceScope.ServiceProvider.GetService<RoleManager<RoleEntity>>();
+
     context?.Database.Migrate();
 
-    if(!context.Products.Any())
+    if (!context.Products.Any())
     {
         var cat = context.Categories.FirstOrDefault();
-        if (cat!=null)
+        if (cat != null)
         {
             var p = new ProductEntity
             {
-                Category=cat,
-                Name= "Ель-Капрічо",
-                Price=155.00m
+                Category = cat,
+                Name = "Ель-Капрічо",
+                Price = 155.00m
             };
             var pi1 = new ProductImageEntity
             {
-                Name="1.webp",
-                Priority=0,
-                Product=p
+                Name = "1.webp",
+                Priority = 0,
+                Product = p
             };
             var pi2 = new ProductImageEntity
             {
-                Name="2.jpg",
-                Priority=1,
-                Product=p
+                Name = "2.jpg",
+                Priority = 1,
+                Product = p
             };
             context.Add(p);
             context.Add(pi1);
@@ -48,6 +95,52 @@ using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>(
             context.SaveChanges();
         }
     }
+
+    if (!context.Roles.Any())
+    {
+        var adminRole = new RoleEntity { Name = Roles.Admin };
+        var userRole = new RoleEntity { Name = Roles.User };
+
+        var result = await roleManager.CreateAsync(adminRole);
+        if (!result.Succeeded)
+        {
+            Console.WriteLine($"------Помилка створення ролі {Roles.Admin}------");
+        }
+
+        result = await roleManager.CreateAsync(userRole);
+        if (!result.Succeeded)
+        {
+            Console.WriteLine($"------Помилка створення ролі {Roles.User}------");
+        }
+    }
+
+    if (!context.Users.Any())
+    {
+        var user = new UserEntity
+        {
+            Email = "admin@gmail.com",
+            UserName="admin@gmail.com",
+            LastName="Шолом",
+            FirstName="Вулкан",
+            Picture="amdin.jpg"
+        };
+        var result = userManager.CreateAsync(user, "123456").Result;
+        if(result.Succeeded)
+        {
+            result = userManager.AddToRoleAsync(user, Roles.Admin).Result;
+            if (!result.Succeeded)
+            {
+                Console.WriteLine($"-------Не вдалося надати роль {Roles.Admin} користувачу {user.Email}------");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"-------Не вдалося створити користувача {user.Email}-------");
+        }
+    }
+
+    
+
 }
 
 
@@ -60,6 +153,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseCookiePolicy();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

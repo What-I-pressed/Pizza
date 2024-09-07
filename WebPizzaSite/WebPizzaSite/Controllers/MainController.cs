@@ -45,7 +45,7 @@ namespace WebPizzaSite.Controllers
         {
             if (ModelState.IsValid)
             {
-                string filePath = null;
+                string? filePath = null;
                 if (model.Image != null && model.Image.Length > 0)
                 {
                     filePath = Path.GetFileName(model.Image.FileName);

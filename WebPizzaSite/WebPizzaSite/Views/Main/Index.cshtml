@@ -30,7 +30,7 @@
                         </a>
                     </td>
                     <td>
-                        <i class="bi bi-trash3 fs-3 text-danger"
+                        <i href="@Url.Action("Delete", new { id = item.Id })" class="bi bi-trash3 fs-3 text-danger"
                            data-delete
                            data-id="@item.Id"
                            data-name="@item.Name"
@@ -46,36 +46,5 @@
 
 @await Html.PartialAsync("Partials/_ModalDelete")
 
-@section Scripts {
-   <script>
-        //Текст в модальному вікні
-        const pSure = document.getElementById("p-sure");
-        //Модальне вікно
-        const deleteConfirmModal = new bootstrap.Modal("#deleteConfirmModal");
-        //id - який ми хочемо видалить
-        let remoteId = 0;
-
-        const onDeleteEvent = () => {
-            let btns = document.querySelectorAll('[data-delete]');
-            btns.forEach(button => {
-                button.addEventListener('click', (event) => {
-                    const { dataset } = event.target;
-                    const { id, name } = dataset;
-                    pSure.innerHTML = `Ви дійсно бажаєте видалити категорію '${name}'?`;
-                    deleteConfirmModal.show();
-                    remoteId = id;  //зберігаємо id - категорії, яку потрібно видалить
-                });
-            });
-        }
-
-        onDeleteEvent();
-
-        document.getElementById("yes-button").addEventListener("click", async () => {
-            await axios.delete(`/main/delete/${remoteId}`)
-            window.location.reload();
-        });
-
-   </script>
-}
 
    
