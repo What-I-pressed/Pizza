@@ -1,0 +1,49 @@
+﻿@using Microsoft.AspNetCore.Identity;
+@using WebPizzaSite.Data.Entities.Identity;
+
+@inject SignInManager<UserEntity> _signInManager;
+
+
+
+@{
+    var user = await _signInManager.UserManager.GetUserAsync(User);
+
+    <div>
+        <h1 class="text-center mt-3">Profile</h1>
+        <h3 class="text-center mt-3">Admin info</h3>
+
+        <dl class="row" style="font-size: 1.5rem;">
+            <dd class="col-sm-9">
+                <img src="@Url.Content("\\" + @user.Picture)" alt="Profile Picture" style="max-width: 200px;">
+            </dd>
+
+            <div style="display: flex;">
+                <dt class="col-sm-3 mt-3">First Name</dt>
+                <dd class="col-sm-9 mt-3">@user.FirstName</dd>
+            </div>
+
+            <div style ="display: flex;">
+                <dt class="col-sm-3 mt-3">Last Name</dt>
+                <dd class="col-sm-9 mt-3">@user.LastName</dd>
+            </div style="display: flex; align-items: center;">
+            <div style="display: flex; align-items: center;">
+                <dt class="col-sm-3 mt-3">Email</dt>
+                <dd class="col-sm-9 mt-3">@user.Email</dd>
+            </div>
+            <div style="display: flex;;">
+                <dt class="col-sm-3 mt-3">User Name</dt>
+                <dd class="col-sm-9 mt-3">@user.UserName</dd>
+            </div>
+
+            
+
+            
+
+            
+
+            
+
+        </dl>
+    </div>
+}
+

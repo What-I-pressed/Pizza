@@ -62,7 +62,7 @@ namespace WebPizzaSite.Controllers
             var user = await _userManager.FindByIdAsync(userId.ToString());
             if (user == null)
             {
-                return NotFound(); // Повертає сторінку з помилкою 404, якщо користувача не знайдено
+                return NotFound(); // Якщо користувача не знайдено
             }
 
             var model = new UserProfileViewModel
@@ -70,11 +70,36 @@ namespace WebPizzaSite.Controllers
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email,
-                UserName = user.UserName
+                UserName = user.UserName,
+                Picture = user.Picture // Передаємо шлях до зображення
             };
 
-            return View(model); // Повертає представлення профілю з даними
+            return View(model);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> UploadProfilePicture(IFormFile file)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (file != null && file.Length > 0)
+            {
+                var fileName = Path.GetFileName(file.FileName);
+                var filePath = Path.Combine("wwwroot/uploads", fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                
+                user.Picture = $"/uploads/{fileName}"; // Store the relative URL
+                await _userManager.UpdateAsync(user);
+            }
+
+            return RedirectToAction("Profile", new { userId = user.Id });
+        }
+
+
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -120,33 +145,5 @@ namespace WebPizzaSite.Controllers
 
             return View(model);
         }
-
-        public async Task<IActionResult> AdminPanel()
-        {
-            var users = _userManager.Users.Where(u => u.UserName != User.Identity.Name).ToList();
-            var model = users.Select(u => new AdminPanelViewModel
-            {
-                Id = u.Id,
-                FirstName = u.FirstName,
-                LastName = u.LastName,
-                Email = u.Email,
-                UserName = u.UserName
-            }).ToList();
-
-            return View(model);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var user = await _userManager.FindByIdAsync(id.ToString());
-            if (user != null)
-            {
-                await _userManager.DeleteAsync(user);
-            }
-
-            return RedirectToAction("Login", "Account");
-        }
-
     }
 }

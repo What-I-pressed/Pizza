@@ -15,6 +15,18 @@
 
         <dt class="col-sm-3">User Name</dt>
         <dd class="col-sm-9">@Model.UserName</dd>
+
+        <dt class="col-sm-3">Profile Picture</dt>
+        <dd class="col-sm-9">
+            @if (!string.IsNullOrEmpty(Model.Picture))
+            {
+                <img src="@Model.Picture" alt="Profile Picture" class="img-thumbnail" style="max-width: 150px;" />
+            }
+            else
+            {
+                <p>No picture available.</p>
+            }
+        </dd>
     </dl>
 
     <!-- Кнопка виходу -->

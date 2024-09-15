@@ -1,0 +1,75 @@
+﻿@using WebPizzaSite.Areas.Admin.Models;
+
+@model IEnumerable<AdminPanelViewModel>
+
+<div>
+    <h1 class="text-center mt-3">Admin Panel</h1>
+    <h3>Registered Users</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+                <th>User Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td>@user.FirstName</td>
+                    <td>@user.LastName</td>
+                    <td>@user.Email</td>
+                    <td>@user.UserName</td>
+                    <td>
+                        <form asp-action="Delete" asp-route-id="@user.Id" method="post" class="form-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        //Текст в модальному вікні
+        const pSure = document.getElementById("p-sure");
+        //Модальне вікно
+        const deleteConfirmModal = new bootstrap.Modal("#deleteConfirmModal");
+        //id - який ми хочемо видалить
+        let remoteId = 0;
+
+        const onDeleteEvent = () => {
+            let btns = document.querySelectorAll('[data-delete]');
+            btns.forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const { dataset } = event.target;
+                    const { id} = dataset;
+                    pSure.innerHTML = `Ви дійсно бажаєте видалити категорію '${name}'?`;
+                    deleteConfirmModal.show();
+                    remoteId = id;  //зберігаємо id - категорії, яку потрібно видалить
+                });
+            });
+        }
+
+        onDeleteEvent();
+
+        document.getElementById("yes-button").addEventListener("click", async () => {
+            try {
+                await axios.post(`/Admin/Delete`, { id: remoteId });
+                window.location.reload();
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                alert('Failed to delete user');
+            }
+        });
+
+
+
+    </script>
+}

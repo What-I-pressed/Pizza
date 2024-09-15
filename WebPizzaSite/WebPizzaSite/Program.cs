@@ -15,8 +15,9 @@ builder.Services.AddDbContext<PizzaDbContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
-// Identity options
-builder.Services.AddIdentity<UserEntity, RoleEntity>(options =>
+
+    // Identity options
+    builder.Services.AddIdentity<UserEntity, RoleEntity>(options =>
 {
     options.Password.RequireDigit = false;
     options.Password.RequireNonAlphanumeric = false;
@@ -63,6 +64,7 @@ using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>(
     var context = serviceScope.ServiceProvider.GetService<PizzaDbContext>();
     var userManager = serviceScope.ServiceProvider.GetService<UserManager<UserEntity>>();
     var roleManager = serviceScope.ServiceProvider.GetService<RoleManager<RoleEntity>>();
+
 
     context?.Database.Migrate();
 
@@ -122,7 +124,7 @@ using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>(
             UserName="admin@gmail.com",
             LastName="Шолом",
             FirstName="Вулкан",
-            Picture="amdin.jpg"
+            Picture= "uploads\\amdin.jpg"
         };
         var result = userManager.CreateAsync(user, "123456").Result;
         if(result.Succeeded)
@@ -151,14 +153,28 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseStaticFiles();
 
+
 app.UseRouting();
 
 app.UseCookiePolicy();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Main}/{action=Index}/{id?}");
+//app.MapControllerRoute(
+//    name: "default",
+//    pattern: "{controller=Main}/{action=Index}/{id?}");
+#pragma warning disable ASP0014 // Suggest using top level route registrations
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapAreaControllerRoute(
+        name: "admin_area",
+        areaName: "Admin",
+        pattern: "/admin/{controller=Home}/{action=Index}/{id?}");
+
+    endpoints.MapControllerRoute(
+        name: "default",
+        pattern: "{controller=Main}/{action=Index}/{id?}");
+});
+#pragma warning restore ASP0014 // Suggest using top level route registrations
 
 app.Run();
