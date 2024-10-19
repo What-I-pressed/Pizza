@@ -12,7 +12,7 @@ namespace WebAlina.Data.Entities
         public string Name { get; set; } = String.Empty;
         [StringLength(4000)]
         public string? Description { get; set; }
-        [StringLength(200)]
+        [StringLength(4000)]
         public string? Image { get; set; }
         public virtual ICollection<ProductEntity>? Products { get; set; }
     }

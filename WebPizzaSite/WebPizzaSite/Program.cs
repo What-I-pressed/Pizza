@@ -29,11 +29,6 @@ builder.Services.AddIdentity<UserEntity, RoleEntity>(options =>
     options.Password.RequiredLength = 6;
     options.Password.RequiredUniqueChars = 1;
 
-    //options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
-    //options.Lockout.MaxFailedAccessAttempts = 5;
-    //options.Lockout.AllowedForNewUsers = true;
-
-    //options.SignIn.RequireConfirmedEmail = true;
 })
     .AddEntityFrameworkStores<PizzaDbContext>()
     .AddDefaultTokenProviders();

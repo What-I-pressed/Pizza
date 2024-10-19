@@ -7,7 +7,7 @@ namespace WebAlina.Data.Entities
     {
         [Key]
         public int Id { get; set; }
-        [Required, StringLength(255)]
+        [Required, StringLength(4000)]
         public string Image { get; set; } = string.Empty;
         public int Priority { get; set; }
         [ForeignKey("Product")]
